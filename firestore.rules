@@ -1,0 +1,107 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for authentication and administrative authorization
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // =========================================================================
+    // FORSYTH ADMIN AUTHORIZATION
+    // =========================================================================
+    // Authorized admin: Forsyth's admin UID or custom claim `admin: true`.
+    function isAuthorizedAdmin() {
+      return isAuthenticated() && (
+        request.auth.uid == 'zgxSYO653TfMXQTo0YEEqQOJbOK2' ||
+        request.auth.token.admin == true
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // 1. CANONICAL QUESTIONS (Read-only for public; Write only for admin)
+    // Canonical correct answers cannot be modified by participants.
+    // -------------------------------------------------------------------------
+    match /questions/{questionId} {
+      allow read: if true;
+      allow write: if isAuthorizedAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. SUBMISSIONS
+    // -------------------------------------------------------------------------
+    match /submissions/{submissionId} {
+      // Participants cannot list all submissions. Public unauthenticated users cannot read.
+      allow list: if isAuthorizedAdmin();
+
+      // Participants cannot read another participant's submission.
+      // An individual participant may read only their own submission.
+      allow get: if isAuthorizedAdmin() || (
+        isAuthenticated() && (resource == null || resource.data.ownerUid == request.auth.uid)
+      );
+
+      // Signed-in anonymous participants may create only their own submission
+      // using ownerUid == request.auth.uid.
+      allow create: if isAuthenticated() && (
+        request.resource.data.ownerUid == request.auth.uid
+      ) && (
+        request.resource.data.mode == 'quick' || request.resource.data.mode == 'full'
+      ) && (
+        request.resource.data.participantType == 'named' || request.resource.data.participantType == 'anonymous'
+      ) && (
+        // Enforce anonymous submissions strictly store displayName as null
+        request.resource.data.participantType != 'anonymous' || request.resource.data.displayName == null
+      );
+
+      // Updating submission:
+      // Participants cannot change scores after the completed submission is created.
+      // Can only update non-score metadata (e.g. reflectionCompletionStatus) on their own submission.
+      allow update: if isAuthorizedAdmin() || (
+        isAuthenticated() &&
+        resource.data.ownerUid == request.auth.uid &&
+        request.resource.data.ownerUid == resource.data.ownerUid &&
+        request.resource.data.score == resource.data.score &&
+        request.resource.data.correctCount == resource.data.correctCount &&
+        request.resource.data.totalQuestions == resource.data.totalQuestions &&
+        request.resource.data.mode == resource.data.mode
+      );
+
+      // Only the admin UID can delete submissions.
+      allow delete: if isAuthorizedAdmin();
+
+      // -----------------------------------------------------------------------
+      // 3. HONEST ROOM REFLECTIONS SUBCOLLECTION
+      // submissions/{submissionId}/reflections/{reflectionId}
+      // -----------------------------------------------------------------------
+      match /reflections/{reflectionId} {
+        // Participants cannot read another participant's reflections.
+        // Public unauthenticated users cannot read reflections.
+        // Only admin can list and read all reflections.
+        // An individual participant may read only reflections beneath their own submission.
+        allow read: if isAuthorizedAdmin() || (
+          isAuthenticated() &&
+          get(/databases/$(database)/documents/submissions/$(submissionId)).data.ownerUid == request.auth.uid
+        );
+
+        // Participants may create reflections only beneath their own submission.
+        allow create, update: if isAuthorizedAdmin() || (
+          isAuthenticated() &&
+          request.resource.data.ownerUid == request.auth.uid &&
+          get(/databases/$(database)/documents/submissions/$(submissionId)).data.ownerUid == request.auth.uid
+        );
+
+        // Only the admin UID can delete reflections.
+        allow delete: if isAuthorizedAdmin();
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. APPLICATION SETTINGS & CONFIGURATION
+    // -------------------------------------------------------------------------
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAuthorizedAdmin();
+    }
+  }
+}

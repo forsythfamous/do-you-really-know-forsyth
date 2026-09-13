@@ -1,0 +1,6 @@
+{
+  "name": "Do You Really Know Forsyth?",
+  "description": "A playful, mobile-first social quiz with named or anonymous participation and deterministic scoring.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
