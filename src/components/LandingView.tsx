@@ -115,7 +115,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         <button
           id="landing-start-btn"
           onClick={onStart}
-          className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-base sm:text-lg shadow-lg shadow-blue-600/30 hover:shadow-blue-600/40 transition-all flex items-center justify-center gap-3 cursor-pointer focus-visible:ring-4 focus-visible:ring-blue-300 min-h-[52px]"
+          className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-blue-700 hover:bg-blue-800 active:bg-blue-800 text-white font-bold text-base sm:text-lg shadow-lg shadow-blue-600/30 hover:shadow-blue-600/40 transition-all flex items-center justify-center gap-3 cursor-pointer focus-visible:ring-4 focus-visible:ring-blue-300 min-h-[52px]"
         >
           <Play className="w-5 h-5 fill-white" />
           <span>Start Challenge</span>
