@@ -41,9 +41,18 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
+
+  // PID 1 in a container ignores signals without a handler: close cleanly on stop
+  const shutdown = (signal: string) => {
+    console.log(`${signal} received, closing server`);
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(1), 8000).unref();
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 startServer();
