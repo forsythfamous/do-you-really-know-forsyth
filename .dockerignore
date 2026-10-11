@@ -1,0 +1,23 @@
+# Dependencies and build output: rebuilt inside the image
+node_modules
+dist
+
+# Secrets: never in the build context
+.env
+.env.*
+!.env.example
+
+# Git and CI metadata
+.git
+.github
+.gitignore
+
+# Docker files themselves
+Dockerfile
+.dockerignore
+
+# Not needed to build or run
+docs
+README.md
+*.log
+bun.lock
