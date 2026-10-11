@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
 # check=skip=SecretsUsedInArgOrEnv
+
 # ---- Stage 1: build ----
 FROM node:24-slim AS build
 
@@ -26,7 +27,7 @@ ARG VITE_ADMIN_UID=""
 RUN npm run build && npm run build:server
 
 # ---- Stage 2: runtime ----
-FROM node:24-slim AS runtime
+FROM gcr.io/distroless/nodejs24-debian13:nonroot AS runtime
 
 ENV NODE_ENV=production
 WORKDIR /app
@@ -36,10 +37,9 @@ WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/dist-server/server.mjs ./server.mjs
 
-USER node
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD ["node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+  CMD ["/nodejs/bin/node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
 
-CMD ["node", "server.mjs"]
+CMD ["server.mjs"]
