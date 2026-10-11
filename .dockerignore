@@ -1,6 +1,7 @@
 # Dependencies and build output: rebuilt inside the image
 node_modules
 dist
+dist-server
 
 # Secrets: never in the build context
 .env
