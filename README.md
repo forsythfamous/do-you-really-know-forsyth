@@ -361,11 +361,13 @@ Same bytes in every registry. Whatever runs on Azure is provably what runs on AW
 | Resource | Cost |
 |---|---|
 | Docker Hub public repo | Free |
-| ACR Basic | About $0.17/day (about $5/month), billed while the registry exists |
+| ACR Basic | About $0.17/day (about $5/month), billed while the registry existed |
 | ECR | About $0.01/month of storage, covered by Free-plan credits |
 | Scans (ECR basic, Trivy) | Free |
 
-Teardown:
+**Status (2026-10-11):** ACR and ECR were torn down after verification, and the AWS bootstrap access key was deleted. Docker Hub remains the public pull source. The screenshots and digest tables above are the record of the ACR and ECR releases.
+
+Teardown commands used:
 ```bash
 az group delete -n rg-dykf-registry --yes          # ACR and everything in the RG
 aws ecr delete-repository --repository-name do-you-really-know-forsyth --force --region eu-north-1
